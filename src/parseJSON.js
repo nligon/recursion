@@ -10,7 +10,6 @@ var stringTest = function(value) {
   return JSON.stringify(value);
 };
 
-
 var testNumber = function(str) {
   for (var i = 0; i < 10; i++) {
     if (str.charAt(0) === i.toString()) {
@@ -28,14 +27,9 @@ var parseJSON = function(json) {
   }
 
   var res;
-  // your code goes here
-  // if (json === undefined) {
-  //   json = 'undefined';
-  // }
-  // if object
 
   // if array
-  if (json.charAt(0) === '[') {
+  if (json.charAt(0) === '[') { //[true, false, [1, 2, 3, '[1,2,3]']]
     console.log('Array detected!');
     res = json.slice(1, json.length - 1); // ""
     // if array is empty
@@ -43,12 +37,55 @@ var parseJSON = function(json) {
       res = [];
       // if array not empty
     } else {
-      var temp = res.split(',');
       res = [];
-      console.log('temp', temp);
-      for (var i = 0; i < temp.length; i++) {
-        res.push(parseJSON(temp[i]));
+      var inString = false;
+      var inArray = false;
+      var lastComma = 0; //
+      //'1,2,3,"[1,2,3]"]'
+      // iterate through string
+      for (var i = 1; i < json.length - 1; i++) {
+
+        if (json[i] === '"') {
+          inString = !inString;
+        }
+
+        // Only do this if outside a string
+        if (!inString) {
+
+          // array detection
+          if (json[i] === '[') {
+            inArray = true;
+          } else if (json[i] === ']') {
+            inArray = false;
+          }
+
+          // comma detection and element pusher
+          if (json[i] === ',' && !inArray) {
+            res.push(json.slice(lastComma + 1, i));
+            lastComma = i;
+          }
+
+          // if (json[i] === '[') {
+          //   res.push(json.slice(lastComma + 1, i));
+          //   lastComma = i;
+          // }
+
+        }
       }
+      // still in the 'for loop' of "array not empty"
+      res.push(json.slice(lastComma + 1, json.length - 1));
+
+      for (var i = 0; i < res.length; i++) {
+        res[i] = parseJSON(res[i]);
+      }
+
+      // if you hit quotes, toggle inString
+      // if inString === false
+      // if you hit comma
+      // push (slice json[lastComma+1] through json[i])
+      // save index to lastComma
+      // after everything, push (slice json[lastComma+1])
+      // res = map over array, calling parseJSON on each value
     }
 
     // primitives (do not recurse)
@@ -82,13 +119,14 @@ var parseJSON = function(json) {
 };
 
 var testCases = [
-  null,
-  true,
-  false,
-  1,
-  2,
-  'asdf', [],
-  ['1, 2, 3']
+  // null,
+  // true,
+  // false,
+  // 1,
+  // 2,
+  // 'asdf', [],
+  //[true, false, 'abc', '1, 2, 3'],
+  [true, false, [1, 2, 3, '[1,2,3]']]
 ];
 
 var advType = function(item) {
@@ -103,18 +141,22 @@ var test = function(value) {
   var output = parseJSON(JSON.stringify(value));
 
   if (JSON.stringify(output) === JSON.stringify(value)) { //it will do for now...
-    console.log('*********\n' + 'Input type was:', advType(value) + '. Input was: ');
+    console.log('*********'); // + 'Input array length was:', value.length);
+    console.log('Input type was:', advType(value) + '. Input was: ');
     console.log(value);
+    //console.log('Output array length was:', output.length);
     console.log('Output type was:', advType(output) + '. Output was: ');
     console.log(output);
     return 'SUCCESS';
+  } else {
+    console.log('*********'); // + 'Input array length was:', value.length);
+    console.log('Input type was:', advType(value) + '. Input was: ');
+    console.log(value);
+    //console.log('Output array length was:', output.length);
+    console.log('Output type was:', advType(output) + '. Output was: ');
+    console.log(output);
+    return 'FAILURE';
   }
-
-  console.log('*********\n' + 'Input type was:', advType(value) + '. Input was: ');
-  console.log(value);
-  console.log('Output type was:', advType(output) + '. Output was: ');
-  console.log(output);
-  return 'FAILURE';
 };
 
 for (var i = 0; i < testCases.length; i++) {
