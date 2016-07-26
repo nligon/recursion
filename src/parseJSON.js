@@ -23,7 +23,7 @@ var testNumber = function(str) {
 var parseJSON = function(json) {
   console.log('parseJSON running on value:', json);
   if (json === undefined) {
-    return 'Error: parseJSON does not accept undefined as a valid input';
+    return 'Error: json is undefined';
   }
 
   var res;
@@ -88,6 +88,70 @@ var parseJSON = function(json) {
       // res = map over array, calling parseJSON on each value
     }
 
+
+    // if object
+  } else if (json.charAt(0) === '{') {
+    if (json === '{}') { //TODO: are there any edge cases?
+      res = {};
+    } else {
+      var inString = false; 
+      var inObject = false;
+      var lastComma = 0;
+      resArr = [];
+
+      for (var i = 1; i < json.length - 1; i++) {
+        console.log('iterating', i);
+        if (json[i] === '"') {
+          inString = !inString;
+        }
+
+        //string detection
+        if (!inString) {
+
+          //object detection
+          if (json[i] === '{') {
+            inObject = true;
+          } else if (json[i] === '}') {
+            inObject = false;
+          }
+
+          if (json[i] === ',' && !inObject) {
+            resArr.push(json.slice(lastComma + 1, i));
+            lastComma = i;
+          }
+        }
+      }
+
+      console.log('lastComma:', lastComma);
+      resArr = resArr.concat(json.slice(lastComma + 1, json.length - 1));
+      //iterate through the input
+        //check if you are in a string and toggle
+          //if you are not in a string
+            //if you hit comma
+              //push json.slice(lastComma,i)
+              //update lastComma
+      // after everything, push json.slice[lastComma+1])
+      res = {};
+
+      console.log('resArr is:', resArr);
+
+      for (var j = 0; j < resArr.length; j++) {
+        console.log('j', j, resArr.length);
+        var colonIndex = resArr[j].indexOf(':');
+        var key = parseJSON(resArr[j].slice(0, colonIndex));
+        var value = parseJSON(resArr[j].slice(colonIndex + 1));
+
+        res[key] = value;
+        // res[parseJSON(key)] = parseJSON(value);
+      }
+
+      //resArr now has key-value pairs (in string form)
+      //iterate through resArr and split by colon
+      //key and value should be passed into parseJSON
+      //assign key and value to res
+    }
+
+
     // primitives (do not recurse)
     // if number
   } else if (testNumber(json)) {
@@ -113,8 +177,10 @@ var parseJSON = function(json) {
     console.log('String detected!');
     res = json.slice(1, json.length - 1);
   } else {
+    console.log("something here");
     res = 'Error: Type not found';
   }
+console.log('returning res. res is: ', res);
   return res;
 };
 
@@ -125,8 +191,11 @@ var testCases = [
   // 1,
   // 2,
   // 'asdf', [],
-  //[true, false, 'abc', '1, 2, 3'],
-  [true, false, [1, 2, 3, '[1,2,3]']]
+  // [true, false, 'abc', '1, 2, 3'],
+  // [true, false, [1, 2, 3, '[1,2,3]']],
+  // {},
+  // {a: 3, c: 'd,', e: 'f'},
+  { a: 3, c: {k: 'j'}, e: 'f', g: 'h'}
 ];
 
 var advType = function(item) {
