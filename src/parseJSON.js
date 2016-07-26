@@ -5,31 +5,69 @@
 // when it's an Array or Object, you recurse, for each element, run the function, return JSON object or primitive
 // but you're not, so you'll write it from scratch:
 
-// var stringTest = function(value) {
-//   // console.log('JSON.Stringify turns ' + value + ' into:');
-//   // console.log(JSON.stringify(value));
-//   return JSON.stringify(value);
-// };
+var stringTest = function(value) {
+  // console.log('JSON.Stringify turns ' + value + ' into:');
+  // console.log(JSON.stringify(value));
+  return JSON.stringify(value);
+};
 
+var backslashRemover = function(str) {
+  var escaped = false;
+  var res = '';
+  for (var i = 0; i < str.length; i++) {
+    if (!escaped && str[i] === '\\') {
+      escaped = !escaped; //do not push
+    } else if (escaped) {
+      res = res.concat(str[i]);
+      escaped = !escaped;
+    } else {
+      res = res.concat(str[i]);
+    }
+  }
+  return res;
+};
 
 
 var parseJSON = function(json) {
+  console.log('parseJSON running on value:<' + json + '>');
+  if (typeof json !== 'string') {
+    console.log('input must be a string');
+  }
 
   // if (typeof json !== 'string') {
   //   throw SyntaxError;
   // }
 
-  var testNumber = function(str) {
-    for (var i = 0; i < 10; i++) {
-      if (str.charAt(0) === i.toString()) {
-        // console.log("Number found!");
-        return true;
-      }
+  // first, remove spaces
+  var jsonSpaced = json;
+  var json = '';
+  var inSQString = false;
+  var inDQString = false;
+
+  for (var i = 0; i < jsonSpaced.length; i++) {
+    if (jsonSpaced[i] === "'" && jsonSpaced[i - 1] !== '\\') {
+      inSQString = !inSQString;
     }
-    return false;
+    if (jsonSpaced[i] === '"' && jsonSpaced[i - 1] !== '\\') {
+      inDQString = !inDQString;
+    }
+
+    if (!inDQString && !inSQString && jsonSpaced[i] === ' ') {
+      // if you're outside all strings, don't push the space
+    } else {
+      json = json.concat(jsonSpaced[i]);
+    }
+    // json.push(jsonSpaced[i]);
+    // console.log('json is:', json);
+    // i--; 
+  }
+
+  // next, remove slashes
+
+  var testNumber = function(str) {
+    return !isNaN(parseFloat(str)) && isFinite(str);
   };
 
-  console.log('parseJSON running on value:', json);
   if (json === undefined) {
     return 'Error: json is undefined';
   }
@@ -38,7 +76,7 @@ var parseJSON = function(json) {
 
   // if array
   if (json.charAt(0) === '[') { //[true, false, [1, 2, 3, '[1,2,3]']]
-    // console.log('Array detected!');
+    console.log('Array detected!');
     res = json.slice(1, json.length - 1); // ""
     // if array is empty
     if (res.length === 0) {
@@ -54,7 +92,7 @@ var parseJSON = function(json) {
       // iterate through string
       for (var i = 1; i < json.length - 1; i++) {
 
-        if (json[i] === '"') {
+        if (json[i] === '"' && json[i - 1] !== '\\') {
           inString = !inString;
         }
 
@@ -62,21 +100,21 @@ var parseJSON = function(json) {
         if (!inString) {
 
           // array detection within arrays
-          if (json[i] === '[') {
+          if (json[i] === '[' && json[i - 1] !== '\\') {
             arrLayer++;
-          } else if (json[i] === ']') {
+          } else if (json[i] === ']' && json[i - 1] !== '\\') {
             arrLayer--;
           }
 
           //object detection within arrays
-          if (json[i] === '{') {
+          if (json[i] === '{' && json[i - 1] !== '\\') {
             objLayer++;
-          } else if (json[i] === '}') {
+          } else if (json[i] === '}' && json[i - 1] !== '\\') {
             objLayer--;
           }
 
           // comma detection and element pusher
-          if (json[i] === ',' && !arrLayer && !objLayer) {
+          if (json[i] === ',' && !arrLayer && !objLayer && json[i - 1] !== '\\') {
             res.push(json.slice(lastComma + 1, i));
             lastComma = i;
           }
@@ -107,6 +145,7 @@ var parseJSON = function(json) {
 
     // if object
   } else if (json.charAt(0) === '{') {
+    console.log('Object detected');
     if (json === '{}') { //TODO: are there any edge cases?
       res = {};
     } else {
@@ -118,7 +157,7 @@ var parseJSON = function(json) {
 
       for (var i = 1; i < json.length - 1; i++) {
         // console.log('iterating', i);
-        if (json[i] === '"') {
+        if (json[i] === '"' && json[i - 1] !== '\\') {
           inString = !inString;
         }
 
@@ -126,20 +165,20 @@ var parseJSON = function(json) {
         if (!inString) {
 
           // object detection within objects
-          if (json[i] === '{') {
+          if (json[i] === '{' && json[i - 1] !== '\\') {
             objLayer++;
-          } else if (json[i] === '}') {
+          } else if (json[i] === '}' && json[i - 1] !== '\\') {
             objLayer--;
           }
 
           // array detection within objects
-          if (json[i] === '[') {
+          if (json[i] === '[' && json[i - 1] !== '\\') {
             arrLayer++;
-          } else if (json[i] === ']') {
+          } else if (json[i] === ']' && json[i - 1] !== '\\') {
             arrLayer--;
           }
 
-          if (json[i] === ',' && !objLayer && !arrLayer) {
+          if (json[i] === ',' && !objLayer && !arrLayer && json[i - 1] !== '\\') {
             resArr.push(json.slice(lastComma + 1, i));
             lastComma = i;
           }
@@ -196,66 +235,74 @@ var parseJSON = function(json) {
   } else if (json === undefined) {
     console.log('found undefined');
     res = undefined;
-    // if string
+  } else if (json === '""') {
+    console.log('found empty string');
+    res = '';
+    // if populated string
   } else if (json.charAt(0) === '"') {
-    console.log('String detected!');
+    console.log('found string');
     res = json.slice(1, json.length - 1);
+    res = backslashRemover(res);
+  } else if (json === '') {
+    console.log('nothing was given');
+    res = json;
   } else {
-    console.log("something here");
+    console.log('no case for: "' + json + '", with type of:', advType(json));
     res = 'Error: Type not found';
   }
-  console.log('returning res. res is: ', res);
+  console.log('returning res. res is:' + '<' + res + '>');
   return res;
 };
 
-// var testCases = [
-//   // null,
-//   // true,
-//   // false,
-//   // 1,
-//   // 2,
-//   // 'asdf', [],
-//   // [true, false, 'abc', '1, 2, 3'],
-//   // [true, false, [1, 2, 3, '[1,2,3]']],
-//   // {},
-//   // {a: 3, c: 'd,', e: 'f'},
-//   { a: 'b', c: {d: '0', '1': {'2': {'3': '4'}}}, e: 'f', g: 'h'},
-//   {a: 'b', c: {d: 'e', 0: {1: '2', 3: {4: 5}, 6: {7: 8, 9: {10: 11}} }}, f: 'g'},
-//   [true, false, [1, 2, 3, '[1,2,3]', ['a', [[], []]]], 'b'],
-//   { 1: [{ 2: '3', 4: 5 }] },
-//   { 1: [{ 2: '3', 4: 5, 6: [{}, {}, {1: {}, 2: [1, 2, 3, {}, 4, [], 'q']}] }] }
-// ];
+var testCases = [
+  // null,
+  // true,
+  // false,
+  // 1,
+  // 2,
+  // 'asdf', [],
+  // [true, false, 'abc', '1, 2, 3'],
+  // [true, false, [1, 2, 3, '[1,2,3]']],
+  // {},
+  // {a: 3, c: 'd,', e: 'f'},
+  // { a: 'b', c: {d: '0', '1': {'2': {'3': '4'}}}, e: 'f', g: 'h'},
+  // {a: 'b', c: {d: 'e', 0: {1: '2', 3: {4: 5}, 6: {7: 8, 9: {10: 11}} }}, f: 'g'},
+  // [true, false, [1, 2, 3, '[1,2,3]', ['a', [[], []]]], 'b'],
+  // { 1: [{ 2: '3', 4: 5 }] },
+  // { 1: [{ 2: '3', 4: 5, 6: [{}, {}, {1: {}, 2: [1, 2, 3, {}, 4, [], 'q']}] }] }
+  []
+];
 
-// var advType = function(item) {
-//   if (Array.isArray(item)) {
-//     return 'array';
-//   } else {
-//     return typeof item;
-//   }
-// };
+var advType = function(item) {
+  if (Array.isArray(item)) {
+    return 'array';
+  } else {
+    return typeof item;
+  }
+};
 
-// var test = function(value) {
-//   var output = parseJSON(JSON.stringify(value));
+var test = function(value) {
+  var output = parseJSON(JSON.stringify(value));
 
-//   if (JSON.stringify(output) === JSON.stringify(value)) { //it will do for now...
-//     console.log('*********'); // + 'Input array length was:', value.length);
-//     console.log('Input type was:', advType(value) + '. Input was: ');
-//     console.log(value);
-//     //console.log('Output array length was:', output.length);
-//     console.log('Output type was:', advType(output) + '. Output was: ');
-//     console.log(output);
-//     return 'SUCCESS';
-//   } else {
-//     console.log('*********'); // + 'Input array length was:', value.length);
-//     console.log('Input type was:', advType(value) + '. Input was: ');
-//     console.log(value);
-//     //console.log('Output array length was:', output.length);
-//     console.log('Output type was:', advType(output) + '. Output was: ');
-//     console.log(output);
-//     return 'FAILURE';
-//   }
-// };
+  if (JSON.stringify(output) === JSON.stringify(value)) { //it will do for now...
+    console.log('*********'); // + 'Input array length was:', value.length);
+    console.log('Input type was:', advType(value) + '. Input was: ');
+    console.log(value);
+    //console.log('Output array length was:', output.length);
+    console.log('Output type was:', advType(output) + '. Output was: ');
+    console.log(output);
+    return 'SUCCESS';
+  } else {
+    console.log('*********'); // + 'Input array length was:', value.length);
+    console.log('Input type was:', advType(value) + '. Input was: ');
+    console.log(value);
+    //console.log('Output array length was:', output.length);
+    console.log('Output type was:', advType(output) + '. Output was: ');
+    console.log(output);
+    return 'FAILURE';
+  }
+};
 
-// for (var i = 0; i < testCases.length; i++) {
-//   console.log(test(testCases[i]));
-// }
+for (var i = 0; i < testCases.length; i++) {
+  console.log(test(testCases[i]));
+}
