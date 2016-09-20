@@ -305,7 +305,7 @@ var testCases = [
   // 2,
   // 'asdf', [],
   // [true, false, 'abc', '1, 2, 3'],
-  [true, false, [1, 2, 3, '[1,2,3]']],
+  // [true, false, [1, 2, 3, '[1,2,3]']],
   // {},
   // {a: 3, c: 'd,', e: 'f'},
   // { a: 'b', c: {d: '0', '1': {'2': {'3': '4'}}}, e: 'f', g: 'h'},
@@ -315,26 +315,26 @@ var testCases = [
   // { 1: [{ 2: '3', 4: 5, 6: [{}, {}, {1: {}, 2: [1, 2, 3, {}, 4, [], 'q']}] }] }
   // ["\\\"\"a\""]
 
-  {
-    "title": "example glossary",
-    "GlossDiv": {
-      "title": "S",
-      "GlossList": {
-        "GlossEntry": {
-          "ID": "SGML",
-          "SortAs": "SGML",
-          "GlossTerm": "Standard Generalized Markup Language",
-          "Acronym": "SGML",
-          "Abbrev": "ISO 8879:1986",
-          "GlossDef": {
-            "para": "A meta-markup language, used to create markup languages such as DocBook.",
-            "GlossSeeAlso": ["GML", "XML"]
-          },
-          "GlossSee": "markup"
-        }
-      }
-    }
-  }
+  '{\n \
+    "title": "example glossary",\n \
+    "GlossDiv": {\n \
+      "title": "S",\n \
+      "GlossList": {\n \
+        "GlossEntry": {\n \
+          "ID": "SGML",\n \
+          "SortAs": "SGML",\n \
+          "GlossTerm": "Standard Generalized Markup Language",\n \
+          "Acronym": "SGML",\n \
+          "Abbrev": "ISO 8879:1986",\n \
+          "GlossDef": {\n \
+            "para": "A meta-markup language, used to create markup languages such as DocBook.",\n \
+            "GlossSeeAlso": ["GML", "XML"]\n \
+          },\n \
+          "GlossSee": "markup"\n \
+        }\n \
+      }\n \
+    }\n \
+  }'
 
 
 
@@ -349,10 +349,10 @@ var advType = function(item) {
 };
 
 var test = function(value) {
-  var output = parseJSON(JSON.stringify(value));
+  var output = parseJSON(value);
 
   // if (JSON.stringify(output) === JSON.stringify(value)) { //it will do for now...
-  if (_.isEqual(output, value)) {
+  if (_.isEqual(output, JSON.parse(value))) {
     console.log('*********'); // + 'Input array length was:', value.length);
     console.log('Input type was:', advType(value) + '. Input was: ');
     console.log(value);
@@ -363,7 +363,7 @@ var test = function(value) {
   } else {
     console.log('*********'); // + 'Input array length was:', value.length);
     console.log('Input type was:', advType(value) + '. Input was: ');
-    console.log(value);
+    console.log(JSON.parse(value));
     //console.log('Output array length was:', output.length);
     console.log('Output type was:', advType(output) + '. Output was: ');
     console.log(output);
